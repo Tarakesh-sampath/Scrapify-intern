@@ -6,6 +6,9 @@ model = YOLO('../yolov8n.pt')
 
 # Start video capture from webcam
 cap = cv2.VideoCapture(0)
+width, height = 1280, 720
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
 
 # Check if the webcam is opened correctly
 if not cap.isOpened():
@@ -13,7 +16,7 @@ if not cap.isOpened():
     exit()
 
 while True:
-    # Capture frame-by-frame
+    # Capture frame from webcam
     ret, frame = cap.read()
     if not ret:
         print("Error: Failed to capture image")
@@ -34,20 +37,16 @@ while True:
         conf = box.conf[0].cpu().numpy()  # confidence score
         cls = int(box.cls[0].cpu().numpy())  # class ID
         
-        # Draw the bounding box
-        cv2.rectangle(annotated_frame, 
-                      (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), 
-                      (0, 255, 0), 2)  # green box
+        if conf > 0.5:
+            # Draw the bounding box
+            cv2.rectangle(annotated_frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (0, 255, 0), 2)  # green box
         
-        # Draw the label text with the confidence score
-        label = f'{model.names[cls]} {conf:.2f}'
-        cv2.putText(annotated_frame, label, 
-                    (int(xyxy[0]), int(xyxy[1] - 10)), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
+            # Draw the label text with the confidence score
+            label = f'{model.names[cls]} {conf:.2f}'
+            cv2.putText(annotated_frame, label, (int(xyxy[0]), int(xyxy[1] - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            
     # Display the frame with filtered detections
     cv2.imshow('YOLOv8 Detection (Filtered)', annotated_frame)
-
     # Break the loop if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
